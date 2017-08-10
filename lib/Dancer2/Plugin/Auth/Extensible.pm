@@ -51,6 +51,11 @@ has login_template => (
     from_config => sub { 'login' },
 );
 
+has login_template_layout => (
+    is          => 'ro',
+    isa         => Str
+);
+
 has login_page_handler => (
     is          => 'ro',
     isa         => Str,
@@ -1008,6 +1013,12 @@ sub _render_login_page {
     # If app has its own login page view then use it
     # otherwise render our internal one and pass that to 'template'.
     my ( $view, $options ) = ( $plugin->login_template, {} );
+
+    # Check if login template layout has been set and add it to options.
+    if ( $plugin->login_template_layout ) {
+        $options->{ 'layout' } = $plugin->login_template_layout;
+    }
+
     my $template_engine = $plugin->app->template_engine;
     my $path            = $template_engine->view_pathname($view);
     if ( !$template_engine->pathname_exists($path) ) {
@@ -1344,7 +1355,7 @@ The configuration you provide will depend on the authentication provider module
 in use.  For a simple example, see
 L<Dancer2::Plugin::Auth::Extensible::Provider::Config>.
 
-Define that a user must be logged in and have the proper permissions to 
+Define that a user must be logged in and have the proper permissions to
 access a route:
 
     get '/secret' => require_role Confidant => sub { tell_secrets(); };
@@ -1364,7 +1375,7 @@ provider classes, which implement a simple interface and do whatever is required
 to authenticate a user against the chosen source of authentication.
 
 For an example of how simple provider classes are, so you can build your own if
-required or just try out this authentication framework plugin easily, 
+required or just try out this authentication framework plugin easily,
 see L<Dancer2::Plugin::Auth::Extensible::Provider::Config>.
 
 This framework supplies the following providers out-of-the-box:
@@ -1589,7 +1600,7 @@ again, you can disable this by setting C<no_default_pages> and creating your
 own.
 
 This would still leave the routes C<post '/login'> and C<any '/logout'>
-routes in place. To disable them too, set the option C<no_login_handler> 
+routes in place. To disable them too, set the option C<no_login_handler>
 to a true value. In this case, these routes should be defined by the user,
 and should do at least the following:
 
@@ -1609,7 +1620,7 @@ and should do at least the following:
             # authentication failed
         }
     };
-    
+
     any '/logout' => sub {
         app->destroy_session;
     };
@@ -1649,7 +1660,7 @@ the role you're looking for:
 
     if (user_has_role('BeerDrinker')) { pour_beer(); }
 
-You can also provide the username to check; 
+You can also provide the username to check;
 
     if (user_has_role($user, $role)) { .... }
 
@@ -2018,6 +2029,8 @@ In your application's configuation file:
             login_without_redirect: 0
             # Set the view name for a custom login page, defaults to 'login'
             login_template: login
+            # Set the layout name for a custom login page, defaults to Dancer2 default
+            login_template_layout: main
             # After /login: If no return_url is given: land here ('/' is default)
             user_home_page: '/user'
             # After /logout: If no return_url is given: land here (no default)
@@ -2057,10 +2070,10 @@ In your application's configuation file:
                     priority: 0 # Will be checked after realm_one
                     provider: Config
 
-B<Please note> that you B<must> have a session provider configured.  The 
-authentication framework requires sessions in order to track information about 
+B<Please note> that you B<must> have a session provider configured.  The
+authentication framework requires sessions in order to track information about
 the currently logged in user.
-Please see L<Dancer2::Core::Session> for information on how to configure session 
+Please see L<Dancer2::Core::Session> for information on how to configure session
 management within your application.
 
 =head1 METHODS
